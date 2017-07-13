@@ -11,7 +11,9 @@ const todos = [{
 },
 {
     _id: new ObjectID(),
-    text: "Second test todo"
+    text: "Second test todo",
+    completed: true,
+    completedAt: 333
 }];
 
 beforeEach((done) => {
@@ -65,7 +67,7 @@ describe('POST /todos', () => {
 describe('GET /todos/:id', () => {
     it('should return todo doc', (done) => {
         request(app)
-            .get(`/todos${todos[0]._id.toHexString()}`)
+            .get(`/todos/${todos[0]._id.toHexString()}`)
             .expect(200)
             .expect((res) => {
                 expect(res.body.todo.text).toBe(todos[0].text);
@@ -84,7 +86,49 @@ describe('GET /todos/:id', () => {
     it('should return 404 for non-object ids', (done) => {
         request(app)
             .get(`/todos/1234`)
-            .expect(404)
+            .expect(400)
+            .end(done);
+    });
+});
+
+//describe needed for /PATCH
+
+describe('PATCH /todos/:id', () => {
+    it('should update the todo', (done) => {
+        let id = todos[0]._id.toHexString();
+        let text = 'this should be new text';
+
+        request(app)
+            .patch(`/todos/${id}`)
+            .send({
+                completed: true,
+                text
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(text);
+                expect(res.body.todo.completed).toBe(true);
+                expect(res.body.todo.completedAt).toBeA('number');
+            })
+            .end(done);
+    });
+
+    it('should clear completedAt when todo is not completed', (done) => {
+        let id = todos[0]._id.toHexString();
+        let text = 'New text';
+
+        request(app)
+            .patch(`/todos/${id}`)
+            .send({
+                completed: false,
+                text
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(text);
+                expect(res.body.todo.completed).toBe(false);
+                expect(res.body.completedAt).toNotExist();
+            })
             .end(done);
     });
 });
