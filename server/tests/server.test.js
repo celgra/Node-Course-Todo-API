@@ -17,7 +17,8 @@ describe('POST /todos', () => {
 
         request(app)
             .post('/todos')
-            .send({text})
+            .set('x-auth', users[0].tokens[0].token)
+            .send({text, _creator: users[0]._id})
             .expect(200)
             .expect((res) => {
                 expect(res.body.text).toBe(text);
@@ -38,6 +39,7 @@ describe('POST /todos', () => {
     it('should not create todo with invalid body data', (done) => {
         request(app)
             .post('/todos')
+            .set('x-auth', users[0].tokens[0].token)
             .send({})
             .expect(400)
             .end((err, res) => {
@@ -57,6 +59,7 @@ describe('GET /todos/:id', () => {
     it('should return todo doc', (done) => {
         request(app)
             .get(`/todos/${todos[0]._id.toHexString()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(200)
             .expect((res) => {
                 expect(res.body.todo.text).toBe(todos[0].text);
@@ -67,6 +70,7 @@ describe('GET /todos/:id', () => {
     it('should return 404 if todo not found', (done) => {
         request(app)
             .get(`/todos/${new ObjectID().toHexString()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .end(done);
 
@@ -75,6 +79,7 @@ describe('GET /todos/:id', () => {
     it('should return 404 for non-object ids', (done) => {
         request(app)
             .get(`/todos/1234`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(400)
             .end(done);
     });
